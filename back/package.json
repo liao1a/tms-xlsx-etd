@@ -1,0 +1,30 @@
+{
+  "name": "tms-xlsx-etl_back",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "pm2": "pm2 start ecosystem.config.js",
+    "test": "jest --detectOpenHandles",
+    "mongod": "mongod --dbpath=./mongodata --fork --logpath=./mongodata/mongodb.log"
+  },
+  "keywords": [
+    "mongodb",
+    "xlsx"
+  ],
+  "author": "jasony62",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^6.6.0",
+    "eslint-plugin-jest": "^23.0.0",
+    "jest": "^24.9.0"
+  },
+  "dependencies": {
+    "lodash": "^4.17.15",
+    "log4js": "^5.3.0",
+    "mongoose": "^5.7.7",
+    "tms-db": "^0.0.8",
+    "tms-koa": "^0.0.22",
+    "xlsx": "^0.15.1"
+  }
+}
