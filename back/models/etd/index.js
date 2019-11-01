@@ -181,6 +181,7 @@ Context.createModels = function(instance) {
     'xlsx_upload',
     new Schema(
       {
+        name: String,
         path: String,
         upload_at: { type: Date, default: Date.now },
         raw: Number,
@@ -213,4 +214,4 @@ Context.createModels = function(instance) {
   })
 }
 
-module.exports = { Context }
+module.exports = { Context, EtdConfig }

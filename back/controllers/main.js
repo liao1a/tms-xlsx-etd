@@ -4,11 +4,27 @@ const log4js = require('log4js')
 const logger = log4js.getLogger('tms-xlsx-etd')
 const { Ctrl, ResultData, ResultFault } = require('tms-koa')
 const { UploadPlain } = require('tms-koa/lib/model/fs/upload')
-const { Context: EtdContext } = require('../models/etd')
+const { Context: EtdContext, EtdConfig } = require('../models/etd')
 
 class Main extends Ctrl {
   echo() {
     return new ResultData('I am tms-xlsx-etd.')
+  }
+  /**
+   *
+   */
+  columns() {
+    const columns = EtdConfig.ins().columns
+
+    return new ResultData(columns)
+  }
+  async fileInfo() {
+    const { src } = this.request.query
+
+    const ModelUpload = await EtdContext.ModelUpload()
+    const file = await ModelUpload.findOne({ path: src })
+
+    return new ResultData(file)
   }
   /**
    * 已长传文件列表
@@ -57,6 +73,8 @@ class Main extends Ctrl {
     }
 
     const file = this.request.files.file
+    const info = this.request.body
+
     const upload = new UploadPlain()
     const filepath = await upload.store(file)
 
@@ -67,9 +85,12 @@ class Main extends Ctrl {
     // const json = xlsx.utils.sheet_to_json(sh)
 
     const ModelUpload = await EtdContext.ModelUpload()
-    ModelUpload.create({ path: filepath }, err => {
-      if (err) logger.warn('ModelUpload.create', err)
-    })
+    ModelUpload.create(
+      { path: filepath, name: file.name, remark: info.remark },
+      err => {
+        if (err) logger.warn('ModelUpload.create', err)
+      }
+    )
 
     return new ResultData(filepath)
   }
@@ -91,9 +112,9 @@ class Main extends Ctrl {
     const sh = wb.Sheets[firstSheetName]
     const json = xlsx.utils.sheet_to_json(sh)
 
-    const xlsxConfig = EtdContext.xlsxConfig()
+    const etdConfig = EtdConfig.ins()
     const lable2Name = new Map(
-      xlsxConfig.columns.map(col => [col.label, col.name])
+      etdConfig.columns.map(col => [col.label, col.name])
     )
 
     const jsonRawRows = json.map(row => {
@@ -128,8 +149,8 @@ class Main extends Ctrl {
     const ModelFailed = await EtdContext.ModelFailed()
     await ModelFailed.deleteMany({ path: src })
 
-    const xlsxConfig = EtdContext.xlsxConfig()
-    const pluginConfigs = xlsxConfig.transform
+    const etdConfig = EtdConfig.ins()
+    const pluginConfigs = etdConfig.transform
     const ModelRaw = await EtdContext.ModelRaw()
 
     return new Promise(resolve => {
@@ -173,7 +194,7 @@ class Main extends Ctrl {
         }
 
         const ModelUpload = await EtdContext.ModelUpload()
-        const res = await ModelUpload.updateOne(
+        await ModelUpload.updateOne(
           { path: src },
           { $set: { passed: docs.length, failed: failed.length } }
         )
@@ -186,8 +207,8 @@ class Main extends Ctrl {
    */
   async dispatch() {
     const { src } = this.request.query
-    const xlsxConfig = EtdContext.xlsxConfig()
-    const pluginConfigs = xlsxConfig.dispatch
+    const etdConfig = EtdConfig.ins()
+    const pluginConfigs = etdConfig.dispatch
     const ModelPassed = await EtdContext.ModelPassed()
     return new Promise(resolve => {
       ModelPassed.find({ path: src }, async (err, docs) => {
@@ -210,6 +231,26 @@ class Main extends Ctrl {
         resolve(new ResultData(docs.length))
       })
     })
+  }
+  /**
+   * 删除文件和数据
+   */
+  async remove() {
+    const { src } = this.request.query
+
+    const ModelFailed = await EtdContext.ModelFailed()
+    await ModelFailed.deleteMany({ path: src })
+    const ModelPassed = await EtdContext.ModelPassed()
+    await ModelPassed.deleteMany({ path: src })
+    const ModelRaw = await EtdContext.ModelRaw()
+    await ModelRaw.deleteMany({ path: src })
+    const ModelUpload = await EtdContext.ModelUpload()
+    await ModelUpload.deleteOne({ path: src })
+
+    const fsUpload = new UploadPlain()
+    fsUpload.fs.remove(src)
+
+    return new ResultData('ok')
   }
 }
 

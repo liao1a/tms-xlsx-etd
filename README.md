@@ -11,6 +11,7 @@
 | API       | method | url 参数        |
 | --------- | ------ | --------------- |
 | upload    | POST   |                 |
+| remove    | GET    | src: 文件的 url |
 | extract   | GET    | src: 文件的 url |
 | transform | GET    | src: 文件的 url |
 | files     | GET    |                 |
