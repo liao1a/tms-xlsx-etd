@@ -101,7 +101,7 @@ EtdConfig.ins = (function() {
       throw new EtdError(msg)
     }
     instance = new EtdConfig()
-    const { columns, transform, load: dispatch } = require(filename)
+    const { columns, transform, dispatch } = require(filename)
 
     Object.assign(instance, { columns, transform, dispatch })
 

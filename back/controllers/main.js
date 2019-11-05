@@ -203,10 +203,24 @@ class Main extends Ctrl {
     })
   }
   /**
-   * 将处理通过的数据发送给加载插件
+   * 设置的分发器
+   */
+  async dispatchers() {
+    const { dispatch } = EtdConfig.ins()
+
+    return new ResultData(dispatch)
+  }
+  /**
+   * 将处理通过的数据发送给分发插件
    */
   async dispatch() {
-    const { src } = this.request.query
+    const { src, dispatcher } = this.request.query
+    if (typeof src !== 'string' || src.length == 0)
+      return Promise.resolve(new ResultFault('没有指定文件地址'))
+    if (typeof dispatcher !== 'string' || dispatcher.length == 0)
+      return Promise.resolve(new ResultFault('没有指定分发处理操作'))
+
+    const dispatchers = dispatcher.splite(',')
     const etdConfig = EtdConfig.ins()
     const pluginConfigs = etdConfig.dispatch
     const ModelPassed = await EtdContext.ModelPassed()
@@ -222,6 +236,7 @@ class Main extends Ctrl {
           } else {
             continue
           }
+          if (!dispatchers.includes(filename)) continue
           if (!fs.existsSync(path.resolve(`${filename}.js`))) continue
           plugin = require(path.resolve(filename))
           if (typeof plugin === 'function') {

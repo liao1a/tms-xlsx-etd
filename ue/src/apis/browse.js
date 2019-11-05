@@ -48,9 +48,15 @@ export default {
       .then(rst => rst.data.result)
       .catch(err => Promise.reject(err))
   },
-  dispatch(src) {
+  dispatchers() {
     return TmsAxios.ins(name)
-      .get(`${process.env.VUE_APP_API_HOST}/dispatch?src=${src}`)
+      .get(`${process.env.VUE_APP_API_HOST}/dispatchers`)
+      .then(rst => rst.data.result)
+      .catch(err => Promise.reject(err))
+  },
+  dispatch(src, dispatchers) {
+    return TmsAxios.ins(name)
+      .get(`${process.env.VUE_APP_API_HOST}/dispatch?src=${src}&dispatcher=${dispatchers}`)
       .then(rst => rst.data.result)
       .catch(err => Promise.reject(err))
   }

@@ -14,12 +14,21 @@
       </tms-flex>
     </template>
     <template v-slot:right>
-      <div>{{file.name}}</div>
-      <div>
-        <el-button size="mini" type="primary" @click="extract">提取</el-button>
-        <el-button size="mini" type="primary" @click="transform">加工</el-button>
-        <el-button size="mini" type="primary" @click="dispatch">分发</el-button>
-      </div>
+      <tms-flex direction="column">
+        <div>{{file.name}}</div>
+        <div>
+          <el-button size="mini" type="primary" @click="extract">提取</el-button>
+          <el-button size="mini" type="primary" @click="transform">加工</el-button>
+        </div>
+        <div>
+          <el-checkbox-group v-model="checkedDispatchers">
+            <el-checkbox v-for="d in dispatchers" :key="d[0]" :label="d[0]">{{d[2]}}</el-checkbox>
+          </el-checkbox-group>
+        </div>
+        <div>
+          <el-button size="mini" type="primary" @click="dispatch">分发</el-button>
+        </div>
+      </tms-flex>
     </template>
   </tms-frame>
 </template>
@@ -28,10 +37,18 @@ import Vue from 'vue'
 import { Frame, Flex } from 'tms-vue-ui'
 Vue.use(Frame).use(Flex)
 
-import { Button, RadioGroup, RadioButton } from 'element-ui'
+import {
+  Button,
+  RadioGroup,
+  RadioButton,
+  CheckboxGroup,
+  Checkbox
+} from 'element-ui'
 Vue.use(Button)
   .use(RadioGroup)
   .use(RadioButton)
+  .use(CheckboxGroup)
+  .use(Checkbox)
 
 import Rows from './components/Rows.vue'
 import browser from '@/apis/browse'
@@ -44,7 +61,9 @@ export default {
       file: { name: '' },
       category: 'raw',
       columns: null,
-      rows: null
+      rows: null,
+      dispatchers: [],
+      checkedDispatchers: []
     }
   },
   props: ['src'],
@@ -57,6 +76,9 @@ export default {
           this.rows = rows
         })
       })
+    })
+    browser.dispatchers().then(dispatchers => {
+      this.dispatchers = dispatchers
     })
   },
   methods: {
@@ -76,7 +98,7 @@ export default {
       })
     },
     dispatch() {
-      browser.dispatch(this.src).then(() => {
+      browser.dispatch(this.src, this.checkedDispatchers).then(() => {
         this.shiftCategory()
       })
     }
