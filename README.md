@@ -58,6 +58,14 @@ module.exports = {
 
 ## mongodb.js
 
+```
+module.exports = {
+  host: 'localhost',
+  port: 27017,
+  database: 'tms-xlsx-etd'
+}
+```
+
 # 后端（back）
 
 | API          | method | url 参数                              | 功能              |
