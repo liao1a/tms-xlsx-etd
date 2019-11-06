@@ -1,9 +1,5 @@
 /files/
 /mongodata/
-config/app.js
-config/log4js.js
-config/fs.js
-config/mongodb.js
-config/etd.js
+/config/
 /tests/shell
 *.xlsx
