@@ -1,9 +1,6 @@
-import Vue from 'vue'
-import { TmsAxiosPlugin, TmsAxios } from 'tms-vue'
-Vue.use(TmsAxiosPlugin)
+import { TmsAxios } from 'tms-vue'
 
-let name = 'etd-api'
-Vue.TmsAxios({ name })
+const name = 'etd-api'
 
 export default {
   columns() {
@@ -58,6 +55,12 @@ export default {
     return TmsAxios.ins(name)
       .get(`${process.env.VUE_APP_API_HOST}/dispatch?src=${src}&dispatcher=${dispatchers}`)
       .then(rst => rst.data.result)
-      .catch(err => Promise.reject(err))
+      .catch(() => true)
+  },
+  dispatchLogs(src) {
+    return TmsAxios.ins(name)
+      .get(`${process.env.VUE_APP_API_HOST}/dispatchLogs?src=${src}`)
+      .then(rst => rst.data.result)
+      .catch(() => true)
   }
 }

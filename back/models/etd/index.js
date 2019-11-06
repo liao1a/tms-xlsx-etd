@@ -156,6 +156,13 @@ class Context {
     const ins = await Context.ins()
     return ins.models.get('xlsx_failed')
   }
+  /**
+   *
+   */
+  static async ModelDispatch() {
+    const ins = await Context.ins()
+    return ins.models.get('xlsx_dispatch')
+  }
 }
 Context.ins = (function() {
   let instance
@@ -212,6 +219,21 @@ Context.createModels = function(instance) {
 
     instance.models.set(name, Model)
   })
+
+  // 记录分发日志的collection
+  Model = mongoose.model(
+    'xlsx_dispatch',
+    new Schema(
+      {
+        path: String,
+        dispatcher: String,
+        dispatch_at: { type: Date, default: Date.now },
+        result: Object
+      },
+      { collection: 'xlsx_dispatch' }
+    )
+  )
+  instance.models.set('xlsx_dispatch', Model)
 }
 
 module.exports = { Context, EtdConfig }

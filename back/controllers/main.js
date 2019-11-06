@@ -220,19 +220,17 @@ class Main extends Ctrl {
     if (typeof dispatcher !== 'string' || dispatcher.length == 0)
       return Promise.resolve(new ResultFault('没有指定分发处理操作'))
 
-    const dispatchers = dispatcher.splite(',')
+    const dispatchers = dispatcher.split(',')
     const etdConfig = EtdConfig.ins()
     const pluginConfigs = etdConfig.dispatch
     const ModelPassed = await EtdContext.ModelPassed()
     return new Promise(resolve => {
       ModelPassed.find({ path: src }, async (err, docs) => {
-        let pluginCfg, filename, plugin, args
+        let pluginCfg, filename, plugin, args, profile
         for (let i = 0; i < pluginConfigs.length; i++) {
           pluginCfg = pluginConfigs[i]
           if (Array.isArray(pluginCfg) && pluginCfg.length > 0) {
-            ;[filename, ...args] = pluginCfg
-          } else if (typeof pluginCfg === 'string') {
-            filename = pluginCfg
+            ;[filename, args, profile] = pluginCfg
           } else {
             continue
           }
@@ -240,12 +238,31 @@ class Main extends Ctrl {
           if (!fs.existsSync(path.resolve(`${filename}.js`))) continue
           plugin = require(path.resolve(filename))
           if (typeof plugin === 'function') {
-            await plugin(docs, ...args)
+            let result = await plugin(docs, args)
+            /* 记录执行日志 */
+            const ModelDispatch = await EtdContext.ModelDispatch()
+            ModelDispatch.create(
+              { path: src, dispatcher: profile.name, result },
+              err => {
+                if (err) logger.warn('ModelDispatch.create', err)
+              }
+            )
           }
         }
         resolve(new ResultData(docs.length))
       })
     })
+  }
+  /**
+   * 分发日志
+   */
+  async dispatchLogs() {
+    const { src } = this.request.query
+
+    let Model = await EtdContext.ModelDispatch()
+    const logs = await Model.find({ path: src })
+
+    return new ResultData(logs)
   }
   /**
    * 删除文件和数据
