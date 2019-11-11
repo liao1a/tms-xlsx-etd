@@ -1,6 +1,6 @@
 const xlsx = require('xlsx')
 
-module.exports = function(passed, config) {
+module.exports = function(passed, config = {}) {
   const wb = xlsx.utils.book_new()
   const ws = xlsx.utils.json_to_sheet(
     passed.map(row => {
@@ -9,7 +9,7 @@ module.exports = function(passed, config) {
         title: row.title,
         host1: row.host1,
         contact: row.contact,
-        phone: row.phone
+        phone: row.mobile
       }
     })
   )
@@ -21,7 +21,15 @@ module.exports = function(passed, config) {
   //     jsonWorkSheet: ws
   //   }
   // }
-  xlsx.writeFile(wb, 'out.xlsx')
+  let baseName
+  if (config.baseName) {
+    baseName = 'out-' + config.baseName
+  } else {
+    baseName = 'out.xlsx'
+  }
+  if (config.outPath && typeof config.outPath === 'string') baseName = config.outPath + baseName
+  console.log(baseName)
+  xlsx.writeFile(wb, baseName)
 
   return Promise.resolve(true)
 }

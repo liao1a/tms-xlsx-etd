@@ -142,17 +142,22 @@ class Main extends Ctrl {
    * 处理已经提取的数据，分为resolved和rejected两组
    */
   async transform() {
-    const { src } = this.request.query
+    const { src,transforms } = this.request.query
 
     const ModelPassed = await EtdContext.ModelPassed()
     await ModelPassed.deleteMany({ path: src })
     const ModelFailed = await EtdContext.ModelFailed()
     await ModelFailed.deleteMany({ path: src })
 
-    const etdConfig = EtdConfig.ins()
-    const pluginConfigs = etdConfig.transform
     const ModelRaw = await EtdContext.ModelRaw()
 
+    let etdConfig = EtdConfig.ins()
+    const pluginConfigs = etdConfig.transform
+    if (typeof transforms !== 'string' || transforms.length === 0) {
+      return Promise.resolve(new ResultFault('没有指定加工处理项'))
+    }
+    
+    let transforms2 = transforms.split(',')
     return new Promise(resolve => {
       ModelRaw.find({ path: src }, async (err, docs) => {
         if (err) {
@@ -174,6 +179,7 @@ class Main extends Ctrl {
           } else {
             continue
           }
+          if (!transforms2.includes(filename)) continue
           if (!fs.existsSync(path.resolve(`${filename}.js`))) continue
           plugin = require(path.resolve(filename))
           if (typeof plugin === 'function') {
@@ -211,6 +217,14 @@ class Main extends Ctrl {
     return new ResultData(dispatch)
   }
   /**
+   * 设置的过滤项
+   */
+  async transforms() {
+    const { transform } = EtdConfig.ins()
+
+    return new ResultData(transform)
+  }
+  /**
    * 将处理通过的数据发送给分发插件
    */
   async dispatch() {
@@ -223,9 +237,9 @@ class Main extends Ctrl {
     const dispatchers = dispatcher.split(',')
     const etdConfig = EtdConfig.ins()
     const pluginConfigs = etdConfig.dispatch
-    const ModelPassed = await EtdContext.ModelPassed()
+    let ModelContent = await EtdContext.ModelPassed()
     return new Promise(resolve => {
-      ModelPassed.find({ path: src }, async (err, docs) => {
+      ModelContent.find({ path: src }, async (err, docs) => {
         let pluginCfg, filename, plugin, args, profile
         for (let i = 0; i < pluginConfigs.length; i++) {
           pluginCfg = pluginConfigs[i]
@@ -238,6 +252,7 @@ class Main extends Ctrl {
           if (!fs.existsSync(path.resolve(`${filename}.js`))) continue
           plugin = require(path.resolve(filename))
           if (typeof plugin === 'function') {
+            args.baseName = passed + '-' + path.basename(src)
             let result = await plugin(docs, args)
             /* 记录执行日志 */
             const ModelDispatch = await EtdContext.ModelDispatch()
