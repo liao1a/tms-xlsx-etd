@@ -7,6 +7,7 @@ module.exports = function(passed, config = {}) {
       return {
         province: row.province,
         city: row.city,
+        grade: row.grade,
         mobile: row.mobile,
         remark: row.remark
       }
