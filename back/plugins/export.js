@@ -5,11 +5,10 @@ module.exports = function(passed, config = {}) {
   const ws = xlsx.utils.json_to_sheet(
     passed.map(row => {
       return {
-        time: row.time,
-        title: row.title,
-        host1: row.host1,
-        contact: row.contact,
-        phone: row.mobile
+        province: row.province,
+        city: row.city,
+        mobile: row.mobile,
+        remark: row.remark
       }
     })
   )

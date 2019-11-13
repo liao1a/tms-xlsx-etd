@@ -45,7 +45,7 @@ class Main extends Ctrl {
    * 返回指定文件中的内容
    */
   async rows() {
-    const { src, category } = this.request.query
+    let { src, category } = this.request.query
 
     let Model
     switch (category) {
@@ -60,7 +60,7 @@ class Main extends Ctrl {
         break
     }
 
-    const rows = await Model.find({ path: src })
+    let rows = await Model.find({ path: src })
 
     return new ResultData(rows)
   }
@@ -169,7 +169,7 @@ class Main extends Ctrl {
         }
 
         let pluginCfg, filename, plugin, args
-        const failed = []
+        let failed = []
         for (let i = 0; i < pluginConfigs.length; i++) {
           pluginCfg = pluginConfigs[i]
           if (Array.isArray(pluginCfg) && pluginCfg.length > 0) {
@@ -186,13 +186,13 @@ class Main extends Ctrl {
             await plugin(docs, failed, ...args)
           }
         }
-        ModelPassed.insertMany(docs, err => {
+        ModelPassed.insertMany(docs, (err, res) => {
           if (err) {
             logger.warn('ModelPassed.insertMany', err)
           }
         })
         if (failed.length) {
-          ModelFailed.insertMany(failed, err => {
+          ModelFailed.insertMany(failed, (err, res) => {
             if (err) {
               logger.warn('ModelFailed.insertMany', err)
             }
@@ -252,7 +252,7 @@ class Main extends Ctrl {
           if (!fs.existsSync(path.resolve(`${filename}.js`))) continue
           plugin = require(path.resolve(filename))
           if (typeof plugin === 'function') {
-            args.baseName = passed + '-' + path.basename(src)
+            args.baseName = 'passed-' + path.basename(src)
             let result = await plugin(docs, args)
             /* 记录执行日志 */
             const ModelDispatch = await EtdContext.ModelDispatch()
