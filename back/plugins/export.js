@@ -1,4 +1,5 @@
 const xlsx = require('xlsx')
+const fs = require('fs')
 
 module.exports = function(passed, config = {}) {
   const wb = xlsx.utils.book_new()
@@ -27,9 +28,15 @@ module.exports = function(passed, config = {}) {
   } else {
     baseName = 'out.xlsx'
   }
-  if (config.outPath && typeof config.outPath === 'string') baseName = config.outPath + baseName
-  console.log(baseName)
-  xlsx.writeFile(wb, baseName)
+  
+  let outPath = baseName
+  if (config.outPath && typeof config.outPath === 'string') {
+    outPath = config.outPath + baseName
+  }
 
-  return Promise.resolve(true)
+  xlsx.writeFile(wb, outPath)
+
+  let data = {code: 0, msg: "ok", outPath: baseName}
+  if (config.urlPrefix)  data.outPath = config.urlPrefix + '/' + baseName
+  return Promise.resolve(data)
 }
